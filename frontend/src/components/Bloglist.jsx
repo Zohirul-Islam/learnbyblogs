@@ -18,7 +18,9 @@ const Bloglist = () => {
               {item}
             </button>
             {menu === item && (
-              <motion.div layoutId="underline" transition={{type:'spring',stiffness:500,damping:30}}
+              <motion.div
+                layoutId="underline"
+                transition={{ type: "spring", stiffness: 500, damping: 30 }}
                 className="absolute left-0 right-0 top-0 h-7 bg-blue-600 rounded-full -z-1"
               ></motion.div>
             )}
@@ -26,9 +28,11 @@ const Bloglist = () => {
         ))}
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-8 mb-24 mx-8 sm:mx-16 xl:mx-32">
-        {
-          blog_data.filter(item=> menu === "All" ? true : item.category === menu).map(blog=>(<Blogcard key={blog._id} blog={blog}/>))
-        }
+        {blog_data
+          .filter((item) => (menu === "All" ? true : item.category === menu))
+          .map((blog) => (
+            <Blogcard key={blog._id} blog={blog} />
+          ))}
       </div>
     </div>
   );

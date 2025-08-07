@@ -15,7 +15,6 @@ const Blogs = () => {
 
   const fetchBlog = async () => {
     const blog = blog_data.find((item) => item._id === id);
-    console.log(blog);
     setSingleBlog(blog);
   };
   const fetchComments = async () => {
