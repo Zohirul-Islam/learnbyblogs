@@ -2,9 +2,11 @@ import fs from 'fs';
 import imagekit from '../configs/imageKit.js';
 import Blog from '../models/blogModel.js';
 import Comment from '../models/commentModel.js';
+import main from '../configs/gemini.js';
 export const addBlog =async(req,res)=>{
         try {
             const {title,subTitle,description,category,isPublished} = JSON.parse(req.body.blog);
+            console.log(description)
             const imageFile = req.file;
             //check all fields are present
             if(!title || !description || !category || !imageFile){
@@ -58,7 +60,9 @@ export const getBlogById = async(req,res) =>{
 export const deleteBlogById = async(req,res) =>{
     try {
         const {id} = req.body
-        const blog = await Blog.findByIdAndDelete(id);
+         await Blog.findByIdAndDelete(id);
+         /* delete all comments associated with blog */
+         Comment.deleteMany({blog:id})
         res.json({success:true,message:"delete blog successfully"})
 
     } catch (error) {
@@ -69,6 +73,7 @@ export const togglePublish = async(req,res) =>{
     try {
         const {id} = req.body;
         const blog = await Blog.findById(id);
+        console.log(blog);
         blog.isPublished = !blog.isPublished;
         await blog.save()
         res.json({success:true,message:"blog status updated"})
@@ -93,5 +98,16 @@ export const getblogComment = async(req,res) =>{
         res.json({success:true,comments})
     } catch (error) {
             res.json({success:false,message:error.message})
+    }
+}
+export const generateContent =async(req,res)=>{
+    try {
+        const {prompt} = req.body;
+        
+      const content=  await main(prompt + 'Generate a blog content for this topic in simple text format');
+      
+      res.json({success:true,content})
+    } catch (error) {
+        res.json({success:false,message:error.message})
     }
 }

@@ -2,14 +2,12 @@ import jwt from "jsonwebtoken";
 import Blog from "../models/blogModel.js";
 import Comment from "../models/commentModel.js";
 
-
-
 export const adminLogin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     if (
-      email !== process.env.ADMIN_EMAIL ||
+      email.trim().toLowerCase() !== process.env.ADMIN_EMAIL.trim().toLowerCase() ||
       password !== process.env.ADMIN_PASSWORD
     ) {
       return res
@@ -17,9 +15,11 @@ export const adminLogin = async (req, res) => {
         .json({ success: false, message: "Invalid username or password" });
     }
 
-    const token = jwt.sign({ email }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
-    });
+    const token = jwt.sign(
+      { email, role: "admin" },
+      process.env.JWT_SECRET,
+      
+    );
 
     res.json({ success: true, token });
   } catch (error) {
@@ -27,51 +27,61 @@ export const adminLogin = async (req, res) => {
   }
 };
 
-export const getAllBlogsAdmin =async(req,res)=>{
-    try {
-      const blogs = await Blog.find({}).sort({createdAt: -1});
-      res.json({success:true,blogs})
-    } catch (error) {
-      res.json({success:false,message:error.message})
-    }
-}
-export const getAllComments =async(req,res)=>{
-    try {
-      const comments = await Comment.find({}).populate('blog').sort({createdAt: -1})
-      res.json({success:true,comments})
-    } catch (error) {
-      res.json({success:false,message:error.message})
-    }
-}
-export const getDashboard =async(req,res)=>{
-    try {
-      const recentBlogs = await Blog.find({}).sort({createdAt: -1}).limit(5);
-      const blogs = await Blog.countDocuments();
-      const comments = await Comment.countDocuments();
-      const drafts = await Blog.countDocuments({isPublished:false})
-      const dashboardData ={
-        recentBlogs,blogs,comments,drafts
-      }
-      res.json({success:true,dashboardData})
-    } catch (error) {
-      res.json({success:false,message:error.message})
-    }
-}
-export const deleteCommentById =async(req,res)=>{
-    try {
-      const {id} = req.body;
-      await Comment.findByIdAndDelete(id);
-      res.json({success:true,message:"message deleted successfully"})
-    } catch (error) {
-      res.json({success:false,message:error.message})
-    }
-}
-export const approvedCommentById =async(req,res)=>{
-    try {
-      const {id} = req.body;
-      await Comment.findByIdAndUpdate(id,{isApproved:true});
-      res.json({success:true,message:"message deleted successfully"})
-    } catch (error) {
-      res.json({success:false,message:error.message})
-    }
-}
+export const getAllBlogsAdmin = async (req, res) => {
+  try {
+    const blogs = await Blog.find({}).sort({ createdAt: -1 });
+    res.json({ success: true, blogs });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+export const getAllComments = async (req, res) => {
+  try {
+    const comments = await Comment.find({})
+      .populate("blog")
+      .sort({ createdAt: -1 });
+    res.json({ success: true, comments });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+export const getDashboard = async (req, res) => {
+  try {
+    const recentBlogs = await Blog.find({}).sort({ createdAt: -1 }).limit(5);
+    
+    const blogs = await Blog.countDocuments();
+    
+    const comments = await Comment.countDocuments();
+    
+    const drafts = await Blog.countDocuments({ isPublished: false });
+    
+    const dashboardData = {
+      recentBlogs,
+      blogs,
+      comments,
+      drafts,
+    };
+    res.json({ success: true, dashboardData });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+export const deleteCommentById = async (req, res) => {
+  try {
+    const { id } = req.body;
+    await Comment.findByIdAndDelete(id);
+    res.json({ success: true, message: "message deleted successfully" });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};
+export const approvedCommentById = async (req, res) => {
+  try {
+    const { id } = req.body;
+    console.log(id)
+    await Comment.findByIdAndUpdate(id, { isApproved: true });
+    res.json({ success: true, message: "comment approved successfully" });
+  } catch (error) {
+    res.json({ success: false, message: error.message });
+  }
+};

@@ -1,8 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { assets, blogCategories } from "../../assets/assets";
 import Quill from 'quill'
-
+import { useAppContext } from "../../context/AppContext";
+import toast from "react-hot-toast";
+import {parse} from 'marked'
 const AddBlogs = () => {
+  const {axios} = useAppContext();
+  const [loading,setLoading] = useState(false)
+  const [isAdding,setIsAdding] = useState(false);
   const [image, setImage] = useState(false);
   const [title, setTitle] = useState("");
   const [subTitle, setSubtitle] = useState("");
@@ -12,10 +17,50 @@ const AddBlogs = () => {
   const quillRef = useRef(null);
 
   const onSubmitHandler = async (e) => {
-    e.preventDefault();
+    try {
+      e.preventDefault();
+      setIsAdding(true)
+      const blog = {
+        title,subTitle,
+        description:quillRef.current.root.innerHTML,
+        category,isPublished
+      }
+      const formData = new FormData()
+      formData.append('blog',JSON.stringify(blog))
+      formData.append('image',image);
+      console.log(formData);
+      const {data} = await axios.post('/api/blog/add',formData);
+      if(data.success){
+        toast.success(data.message);
+        setImage(false)
+        setTitle('');
+        quillRef.current.root.innerHTML = '';
+        setCategory('Startup')
+      }else{
+        toast.error(data.message)
+      }
+    } catch (error) {
+      toast.error(error.message)
+    }finally{
+      setIsAdding(false)
+    }
   };
-  const generateContent =()=>{
-
+  const generateContent = async()=>{
+    if(!title)return toast.error('please enter a title');
+    try {
+      setLoading(true)
+      const {data} = await axios.post('/api/blog/generate',{prompt:title});
+      
+      if(data.success){
+        quillRef.current.root.innerHTML = parse(data.content)
+      }else{
+        toast.error(data.message)
+      }
+    } catch (error) {
+      toast.error(error.message)
+    }finally{
+      setLoading(false)
+    }
   }
   useEffect(()=>{
     if(!quillRef.current && editorRef.current){
@@ -65,7 +110,10 @@ const AddBlogs = () => {
         <p className="mt-4">Blog Description</p>
         <div className="max-w-lg h-74 pb-16 sm:pb-10 pt-2 relative ">
           <div ref={editorRef}></div>
-            <button className="absolute bottom-1 right-2 ml-2 text-xs text-white bg-black/70 px-4 py-1.5 rounded hover:underline cursor-pointer" type="button" onClick={generateContent}>Genetate with AI</button>
+              {loading && (<div className="absolute right-0 top-0 bottom-0 left-0 flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full border-2 border-t-white animate-spin"></div>
+              </div>)}
+            <button disabled={loading} className="absolute bottom-1 right-2 ml-2 text-xs text-white bg-black/70 px-4 py-1.5 rounded hover:underline cursor-pointer" type="button" onClick={generateContent}>Genetate with AI</button>
         </div>
         <p className="mt-4">Blog Category</p>
         <select onChange={(e)=>setCategory(e.target.value)} name="category" className="mt-2 px-3 py-2 border text-gray-500 border-gray-300 outline-0 rounded">
@@ -80,7 +128,7 @@ const AddBlogs = () => {
           <p>Published Now</p>
           <input onChange={(e)=>setIsPublished(e.target.checked)} type="checkbox" checked = {isPublished} className="scale-125 cursor-pointer" />
         </div>
-        <button type="submit" className="mt-4 w-40 h-10 bg-blue-800 text-white rounded cursor-pointer text-sm">Add Blog</button>
+        <button disabled ={isAdding} type="submit" className="mt-4 w-40 h-10 bg-blue-800 text-white rounded cursor-pointer text-sm">{isAdding ? 'Adding...':'Add Blog'}</button>
       </div>
     </form>
   );
