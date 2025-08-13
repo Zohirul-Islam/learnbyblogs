@@ -63,7 +63,7 @@ const Blogs = () => {
         <p className="py-4 font-medium text-blue-600">
           {moment(singleBlog.createdAt).format("LLLL")}
         </p>
-        <h1 className="text-2xl sm:text-5xl font-semibold max-w-2xl mx-auto text-gray-800">
+        <h1 className="text-2xl capitalize sm:text-5xl font-semibold max-w-2xl mx-auto text-gray-800">
           {singleBlog.title}
         </h1>
         <h2 className="my-5 max-w-lg mx-auto truncate">
